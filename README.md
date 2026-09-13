@@ -6,8 +6,8 @@ An automated lead discovery and qualification agent designed for **The Venture B
 
 ## 🚀 Live Demo & Repository Links
 
-- 🔗 **Live Streamlit App:** [Deploying to Streamlit Cloud - Link to be inserted after deployment]
-- 🐙 **GitHub Repository:** [https://github.com/aarushinayak098-design/TVB-lead-discovery-agent.git](https://github.com/aarushinayak098-design/TVB-lead-discovery-agent.git)
+- 🔗 **Live Streamlit App:** [https://tvb-lead-discovery-agent.streamlit.app](https://tvb-lead-discovery-agent.streamlit.app)
+- 🐙 **GitHub Repository:** [https://github.com/aarushinayak098-design/TVB-lead-discovery-agent](https://github.com/aarushinayak098-design/TVB-lead-discovery-agent)
 
 ---
 
