@@ -17,3 +17,5 @@ ENV/
 Thumbs.db
 .vscode/
 .idea/
+push_to_github.bat
+
