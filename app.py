@@ -590,6 +590,9 @@ if result is not None:
             ],
             use_container_width=True,
             hide_index=True,
+            column_config={
+                "website": st.column_config.LinkColumn("website"),
+            },
         )
 
 
@@ -637,10 +640,14 @@ if result is not None:
                         "",
                     )
 
-                    st.write(
-                        "**Website:**",
-                        website,
-                    )
+                    if website:
+                        st.markdown(
+                            f"**Website:** [{website}]({website})"
+                        )
+                    else:
+                        st.write(
+                            "**Website:** Not available"
+                        )
 
                     st.write(
                         "**Industry:**",
@@ -693,13 +700,19 @@ if result is not None:
                         ),
                     )
 
-                    st.write(
-                        "**Email:**",
-                        lead.get(
-                            "email",
-                            "",
-                        ),
+                    email = lead.get(
+                        "email",
+                        "",
                     )
+
+                    if email:
+                        st.markdown(
+                            f"**Email:** [{email}](mailto:{email})"
+                        )
+                    else:
+                        st.write(
+                            "**Email:** Not available"
+                        )
 
                     st.write(
                         "**Email Verified:**",
