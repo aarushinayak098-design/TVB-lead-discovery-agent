@@ -37,23 +37,34 @@ st.markdown(
         margin-bottom: 25px;
     }
 
-    .metric-box {
-        padding: 20px;
-        border-radius: 12px;
-        background: #171923;
-        border: 1px solid #30323d;
+    .metric-card {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border: 1px solid #334155;
+        border-radius: 14px;
+        padding: 22px 16px;
         text-align: center;
-        min-height: 120px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     }
 
-    .metric-number {
-        font-size: 36px;
+    .metric-icon {
+        font-size: 28px;
+        margin-bottom: 6px;
+    }
+
+    .metric-value {
+        font-size: 38px;
         font-weight: 800;
+        color: #38bdf8;
+        line-height: 1.1;
+        margin-bottom: 6px;
     }
 
     .metric-label {
-        font-size: 15px;
-        color: #aaaaaa;
+        font-size: 13px;
+        font-weight: 600;
+        color: #cbd5e1;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     .info-note {
@@ -479,16 +490,10 @@ if result is not None:
 
         st.markdown(
             f"""
-            <div class="metric-box">
-
-                <div class="metric-number">
-                    {len(candidates_df)}
-                </div>
-
-                <div class="metric-label">
-                    Candidates Investigated
-                </div>
-
+            <div class="metric-card">
+                <div class="metric-icon">🔍</div>
+                <div class="metric-value">{len(candidates_df)}</div>
+                <div class="metric-label">Candidates Investigated</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -499,16 +504,10 @@ if result is not None:
 
         st.markdown(
             f"""
-            <div class="metric-box">
-
-                <div class="metric-number">
-                    {len(leads_df)}
-                </div>
-
-                <div class="metric-label">
-                    Verified TVB Leads
-                </div>
-
+            <div class="metric-card">
+                <div class="metric-icon">✅</div>
+                <div class="metric-value" style="color: #4ade80;">{len(leads_df)}</div>
+                <div class="metric-label">Verified TVB Leads</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -519,16 +518,10 @@ if result is not None:
 
         st.markdown(
             f"""
-            <div class="metric-box">
-
-                <div class="metric-number">
-                    {founder_count}
-                </div>
-
-                <div class="metric-label">
-                    Founder / CEO Found
-                </div>
-
+            <div class="metric-card">
+                <div class="metric-icon">👤</div>
+                <div class="metric-value" style="color: #a78bfa;">{founder_count}</div>
+                <div class="metric-label">Founder / CEO Found</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -539,16 +532,10 @@ if result is not None:
 
         st.markdown(
             f"""
-            <div class="metric-box">
-
-                <div class="metric-number">
-                    {verified_email_count}
-                </div>
-
-                <div class="metric-label">
-                    Verified Emails
-                </div>
-
+            <div class="metric-card">
+                <div class="metric-icon">📧</div>
+                <div class="metric-value" style="color: #f472b6;">{verified_email_count}</div>
+                <div class="metric-label">Verified Emails</div>
             </div>
             """,
             unsafe_allow_html=True,
