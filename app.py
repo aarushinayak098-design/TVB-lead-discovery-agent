@@ -1,23 +1,25 @@
 import streamlit as st
 import pandas as pd
+import time
 
-from agent import discover_companies
+from agent import run_agent
 
 
-# ---------------------------------------------------------
+# ============================================================
 # PAGE CONFIGURATION
-# ---------------------------------------------------------
+# ============================================================
 
 st.set_page_config(
     page_title="TVB Lead Discovery Agent",
     page_icon="🔎",
     layout="wide",
+    initial_sidebar_state="expanded",
 )
 
 
-# ---------------------------------------------------------
+# ============================================================
 # CUSTOM CSS
-# ---------------------------------------------------------
+# ============================================================
 
 st.markdown(
     """
@@ -41,6 +43,7 @@ st.markdown(
         background: #171923;
         border: 1px solid #30323d;
         text-align: center;
+        min-height: 120px;
     }
 
     .metric-number {
@@ -53,19 +56,27 @@ st.markdown(
         color: #aaaaaa;
     }
 
-    .demo-note {
-        padding: 14px;
-        border-radius: 8px;
+    .info-note {
+        padding: 18px;
+        border-radius: 10px;
         background: #19324a;
         color: #dceeff;
         margin-bottom: 20px;
     }
 
     .success-note {
-        padding: 14px;
-        border-radius: 8px;
-        background: #123d25;
-        color: #d9ffe5;
+        padding: 18px;
+        border-radius: 10px;
+        background: #123d28;
+        color: #d9ffe8;
+        margin-bottom: 20px;
+    }
+
+    .warning-note {
+        padding: 18px;
+        border-radius: 10px;
+        background: #493817;
+        color: #fff1c7;
         margin-bottom: 20px;
     }
 
@@ -75,174 +86,469 @@ st.markdown(
 )
 
 
-# ---------------------------------------------------------
+# ============================================================
+# SESSION STATE
+# ============================================================
+
+if "agent_result" not in st.session_state:
+    st.session_state["agent_result"] = run_agent(target=20)
+
+
+# ============================================================
 # SIDEBAR
-# ---------------------------------------------------------
+# ============================================================
 
 with st.sidebar:
 
-    st.header("⚙️ Search Settings")
+    st.header("⚙️ Agent Settings")
 
-    number_to_search = st.slider(
-        "Number of companies to search",
-        min_value=10,
+    target_leads = st.slider(
+        "Target verified leads",
+        min_value=1,
         max_value=30,
         value=20,
         step=1,
     )
 
+    max_candidates = st.slider(
+        "Maximum candidates to investigate",
+        min_value=50,
+        max_value=300,
+        value=150,
+        step=25,
+    )
+
     st.divider()
 
-    st.subheader("TVB Qualification Criteria")
+    st.subheader("🎯 TVB Qualification Criteria")
 
-    st.markdown("**Funding / Revenue:** `$1M–$5M`")
-    st.markdown("**Business:** Technology-related platform")
-    st.markdown("**US Presence:** Minimal or none")
-    st.markdown("**Contact:** CEO / Co-founder")
-    st.markdown("**Email:** Publicly available business email")
+    st.markdown(
+        "💰 **Funding / Revenue:** $1M – $5M"
+    )
+
+    st.markdown(
+        "💻 **Business:** Technology-related platform"
+    )
+
+    st.markdown(
+        "🇺🇸 **US Presence:** Minimal or none"
+    )
+
+    st.markdown(
+        "👤 **Contact:** CEO / Founder / Co-founder"
+    )
+
+    st.markdown(
+        "📧 **Email:** Exact public business email"
+    )
+
+    st.markdown(
+        "🌐 **Source:** Public web evidence"
+    )
+
+    st.markdown(
+        "✅ **Verification:** MX + SMTP when possible"
+    )
+
+    st.divider()
+
+    st.subheader("🔗 TVB References")
+
+    st.markdown(
+        "• [LinkedIn](https://linkedin.com/company/90924902/)"
+    )
+
+    st.markdown(
+        "• [The Venture Build](http://theventurebuild.com/)"
+    )
+
+    st.divider()
+
+    st.caption(
+        "The agent does not create guessed, "
+        "synthetic or fabricated email addresses."
+    )
 
 
-# ---------------------------------------------------------
+# ============================================================
 # HEADER
-# ---------------------------------------------------------
+# ============================================================
 
 st.markdown(
-    '<div class="main-title">🔎 TVB Lead Discovery Agent</div>',
+    '<div class="main-title">'
+    '🔎 TVB Lead Discovery Agent'
+    '</div>',
     unsafe_allow_html=True,
 )
 
 st.markdown(
     '<div class="subtitle">'
-    "Automatically discover and qualify technology companies "
-    "matching The Venture Build's target profile."
+    "Autonomous public-web discovery and qualification "
+    "of technology companies matching The Venture Build's profile."
     "</div>",
     unsafe_allow_html=True,
 )
 
 
-# ---------------------------------------------------------
-# DEMO INFORMATION
-# ---------------------------------------------------------
+# ============================================================
+# INFORMATION BOX
+# ============================================================
 
 st.markdown(
     """
-    <div class="demo-note">
-    🆓 <b>Free Demo Version — No OpenAI API Key Required</b><br><br>
-    The application demonstrates automated company discovery and
-    transparent qualification rules using a synthetic demo dataset.
-    No real contact information is invented or claimed.
+    <div class="info-note">
+
+    <b>🤖 Autonomous Lead Discovery</b><br><br>
+
+    The agent searches multiple public web sources,
+    discovers potential companies, investigates their
+    funding/revenue, technology profile, location,
+    founder/CEO information and public business email.
+
+    <br><br>
+
+    <b>🔐 No Fabrication:</b>
+    The application does not generate guessed email addresses.
+    A lead is shown as verified only when the required evidence
+    is available.
+
     </div>
     """,
     unsafe_allow_html=True,
 )
 
 
-# ---------------------------------------------------------
-# FIND COMPANIES BUTTON
-# ---------------------------------------------------------
+# ============================================================
+# RUN AGENT BUTTON
+# ============================================================
 
-if st.button(
-    "🔎 Find Companies",
+run_button = st.button(
+    "🔎 Find Verified Leads",
     type="primary",
     use_container_width=True,
-):
-
-    with st.spinner("Discovering and qualifying companies..."):
-
-        companies = discover_companies(number_to_search)
-
-    st.session_state["companies"] = companies
+)
 
 
-# ---------------------------------------------------------
+if run_button:
+
+    st.session_state["agent_result"] = None
+
+    status_box = st.empty()
+
+    progress_bar = st.progress(
+        0,
+        text="Starting autonomous discovery...",
+    )
+
+    try:
+
+        status_box.info(
+            "🌐 Searching public web sources..."
+        )
+
+        progress_bar.progress(
+            10,
+            text="Discovering companies..."
+        )
+
+        result = run_agent(
+            target=target_leads,
+            max_candidates=max_candidates,
+        )
+
+        progress_bar.progress(
+            100,
+            text="Completed."
+        )
+
+        time.sleep(0.5)
+
+        status_box.empty()
+
+        st.session_state[
+            "agent_result"
+        ] = result
+
+        st.rerun()
+
+    except Exception as e:
+
+        progress_bar.empty()
+        status_box.empty()
+
+        st.error(
+            f"❌ Agent error: {str(e)}"
+        )
+
+        st.exception(e)
+
+
+# ============================================================
 # DISPLAY RESULTS
-# ---------------------------------------------------------
+# ============================================================
 
-if "companies" in st.session_state:
+result = st.session_state.get(
+    "agent_result"
+)
 
-    companies = st.session_state["companies"]
 
-    df = pd.DataFrame(companies)
+if result is not None:
 
-    qualified_df = df[df["qualified"] == True].copy()
+    # ========================================================
+    # READ RESULT
+    # ========================================================
 
-    founder_count = (
-        df["founder_name"]
-        .fillna("")
-        .astype(str)
-        .str.strip()
-        .ne("")
-        .sum()
+    if isinstance(result, dict):
+
+        leads = result.get(
+            "leads",
+            result.get(
+                "qualified_leads",
+                [],
+            ),
+        )
+
+        all_candidates = result.get(
+            "all_candidates",
+            result.get(
+                "candidates",
+                [],
+            ),
+        )
+
+    else:
+
+        leads = result
+        all_candidates = result
+
+
+    # ========================================================
+    # DATAFRAMES
+    # ========================================================
+
+    leads_df = pd.DataFrame(
+        leads
     )
 
-    email_count = (
-        df["email"]
-        .fillna("")
-        .astype(str)
-        .str.contains("@", regex=False)
-        .sum()
+    candidates_df = pd.DataFrame(
+        all_candidates
     )
 
 
-    # -----------------------------------------------------
-    # COMPLETION MESSAGE
-    # -----------------------------------------------------
+    # ========================================================
+    # EXPECTED COLUMNS
+    # ========================================================
 
-    st.markdown(
-        f"""
-        <div class="success-note">
-        ✅ <b>Completed.</b> Found {len(df)} company records.
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    expected_columns = [
+        "company_name",
+        "description",
+        "industry",
+        "country",
+        "website",
+        "funding_or_revenue",
+        "us_presence",
+        "founder_name",
+        "founder_role",
+        "email",
+        "email_verified",
+        "verification_method",
+        "email_source",
+        "qualification_reason",
+        "sources",
+    ]
 
 
-    # -----------------------------------------------------
+    for column in expected_columns:
+
+        if column not in leads_df.columns:
+
+            leads_df[column] = ""
+
+
+    for column in expected_columns:
+
+        if column not in candidates_df.columns:
+
+            candidates_df[column] = ""
+
+
+    # ========================================================
     # METRICS
-    # -----------------------------------------------------
+    # ========================================================
 
-    col1, col2, col3, col4 = st.columns(4)
+    verified_email_count = 0
+
+    if not leads_df.empty:
+
+        verified_email_count = (
+            leads_df[
+                "email_verified"
+            ]
+            .astype(str)
+            .str.lower()
+            .isin(
+                [
+                    "true",
+                    "1",
+                    "yes",
+                    "pass",
+                ]
+            )
+            .sum()
+        )
+
+
+    founder_count = 0
+
+    if not leads_df.empty:
+
+        founder_count = (
+            leads_df[
+                "founder_name"
+            ]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+            .ne("")
+            .sum()
+        )
+
+
+    # ========================================================
+    # COMPLETION MESSAGE
+    # ========================================================
+
+    if len(leads_df) >= target_leads:
+
+        st.markdown(
+            f"""
+            <div class="success-note">
+
+            <b>✅ Target Reached</b><br><br>
+
+            {len(leads_df)} verified TVB leads
+            were successfully discovered.
+
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    elif len(leads_df) > 0:
+
+        st.markdown(
+            f"""
+            <div class="warning-note">
+
+            <b>⚠️ Partial Result</b><br><br>
+
+            {len(leads_df)} verified leads were found.
+            Target was {target_leads}.
+
+            <br><br>
+
+            No fake leads were added.
+
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    else:
+
+        st.warning(
+            "No verified TVB leads were found."
+        )
+
+        st.info(
+            "Try increasing the maximum candidates "
+            "and run the agent again."
+        )
+
+
+    # ========================================================
+    # METRIC CARDS
+    # ========================================================
+
+    col1, col2, col3, col4 = st.columns(
+        4
+    )
+
 
     with col1:
+
         st.markdown(
             f"""
             <div class="metric-box">
-                <div class="metric-number">{len(df)}</div>
-                <div class="metric-label">Companies Found</div>
+
+                <div class="metric-number">
+                    {len(candidates_df)}
+                </div>
+
+                <div class="metric-label">
+                    Candidates Investigated
+                </div>
+
             </div>
             """,
             unsafe_allow_html=True,
         )
+
 
     with col2:
+
         st.markdown(
             f"""
             <div class="metric-box">
-                <div class="metric-number">{len(qualified_df)}</div>
-                <div class="metric-label">Qualified Leads</div>
+
+                <div class="metric-number">
+                    {len(leads_df)}
+                </div>
+
+                <div class="metric-label">
+                    Verified TVB Leads
+                </div>
+
             </div>
             """,
             unsafe_allow_html=True,
         )
+
 
     with col3:
+
         st.markdown(
             f"""
             <div class="metric-box">
-                <div class="metric-number">{founder_count}</div>
-                <div class="metric-label">Founder / CEO Found</div>
+
+                <div class="metric-number">
+                    {founder_count}
+                </div>
+
+                <div class="metric-label">
+                    Founder / CEO Found
+                </div>
+
             </div>
             """,
             unsafe_allow_html=True,
         )
 
+
     with col4:
+
         st.markdown(
             f"""
             <div class="metric-box">
-                <div class="metric-number">{email_count}</div>
-                <div class="metric-label">Public Emails</div>
+
+                <div class="metric-number">
+                    {verified_email_count}
+                </div>
+
+                <div class="metric-label">
+                    Verified Emails
+                </div>
+
             </div>
             """,
             unsafe_allow_html=True,
@@ -252,127 +558,392 @@ if "companies" in st.session_state:
     st.divider()
 
 
-    # -----------------------------------------------------
-    # QUALIFIED LEADS
-    # -----------------------------------------------------
+    # ========================================================
+    # VERIFIED LEADS TABLE
+    # ========================================================
 
-    st.header("✅ Qualified Leads")
+    if not leads_df.empty:
 
-    if len(qualified_df) > 0:
+        st.header(
+            "✅ Verified TVB Leads"
+        )
 
         display_columns = [
             "company_name",
             "description",
             "industry",
             "country",
+            "website",
             "funding_or_revenue",
             "us_presence",
             "founder_name",
             "founder_role",
             "email",
-            "qualification_reason",
+            "email_verified",
+            "verification_method",
         ]
 
+
         st.dataframe(
-            qualified_df[display_columns],
+            leads_df[
+                display_columns
+            ],
             use_container_width=True,
             hide_index=True,
         )
 
-    else:
 
-        st.warning(
-            "No fully qualified leads were found."
+        # ====================================================
+        # LEAD DETAILS
+        # ====================================================
+
+        st.header(
+            "🔍 Lead Verification Details"
         )
 
 
-    # -----------------------------------------------------
-    # ALL COMPANIES
-    # -----------------------------------------------------
+        for index, lead in leads_df.iterrows():
 
-    st.header("📋 All Discovered Companies")
+            company_name = (
+                lead.get(
+                    "company_name",
+                    "Unknown Company",
+                )
+                or "Unknown Company"
+            )
 
-    all_columns = [
-        "company_name",
-        "description",
-        "industry",
-        "country",
-        "funding_or_revenue",
-        "us_presence",
-        "founder_name",
-        "founder_role",
-        "email",
-        "qualified",
-    ]
 
-    st.dataframe(
-        df[all_columns],
-        use_container_width=True,
-        hide_index=True,
+            with st.expander(
+                f"{index + 1}. {company_name}"
+            ):
+
+                col1, col2 = st.columns(
+                    2
+                )
+
+
+                with col1:
+
+                    st.write(
+                        "**Company:**",
+                        lead.get(
+                            "company_name",
+                            "",
+                        ),
+                    )
+
+                    website = lead.get(
+                        "website",
+                        "",
+                    )
+
+                    st.write(
+                        "**Website:**",
+                        website,
+                    )
+
+                    st.write(
+                        "**Industry:**",
+                        lead.get(
+                            "industry",
+                            "",
+                        ),
+                    )
+
+                    st.write(
+                        "**Country:**",
+                        lead.get(
+                            "country",
+                            "",
+                        ),
+                    )
+
+                    st.write(
+                        "**Funding / Revenue:**",
+                        lead.get(
+                            "funding_or_revenue",
+                            "",
+                        ),
+                    )
+
+                    st.write(
+                        "**US Presence:**",
+                        lead.get(
+                            "us_presence",
+                            "",
+                        ),
+                    )
+
+
+                with col2:
+
+                    st.write(
+                        "**Founder / CEO:**",
+                        lead.get(
+                            "founder_name",
+                            "",
+                        ),
+                    )
+
+                    st.write(
+                        "**Role:**",
+                        lead.get(
+                            "founder_role",
+                            "",
+                        ),
+                    )
+
+                    st.write(
+                        "**Email:**",
+                        lead.get(
+                            "email",
+                            "",
+                        ),
+                    )
+
+                    st.write(
+                        "**Email Verified:**",
+                        lead.get(
+                            "email_verified",
+                            "",
+                        ),
+                    )
+
+                    st.write(
+                        "**Verification Method:**",
+                        lead.get(
+                            "verification_method",
+                            "",
+                        ),
+                    )
+
+
+                st.write(
+                    "**Description:**"
+                )
+
+                st.write(
+                    lead.get(
+                        "description",
+                        "",
+                    )
+                )
+
+
+                st.write(
+                    "**Email Source:**"
+                )
+
+                email_source = lead.get(
+                    "email_source",
+                    "",
+                )
+
+                if email_source:
+
+                    st.markdown(
+                        f"[Open email source]({email_source})"
+                    )
+
+                else:
+
+                    st.write(
+                        "Not available"
+                    )
+
+
+                st.write(
+                    "**Qualification Reason:**"
+                )
+
+                st.write(
+                    lead.get(
+                        "qualification_reason",
+                        "",
+                    )
+                )
+
+
+                st.write(
+                    "**Sources:**"
+                )
+
+                sources = lead.get(
+                    "sources",
+                    [],
+                )
+
+
+                if isinstance(
+                    sources,
+                    list,
+                ):
+
+                    for source in sources:
+
+                        if source:
+
+                            st.markdown(
+                                f"- [{source}]({source})"
+                            )
+
+                elif sources:
+
+                    st.markdown(
+                        f"- [{sources}]({sources})"
+                    )
+
+
+    # ========================================================
+    # ALL CANDIDATES
+    # ========================================================
+
+    st.header(
+        "📋 All Investigated Candidates"
     )
 
 
-    # -----------------------------------------------------
-    # QUALIFICATION DETAILS
-    # -----------------------------------------------------
+    if candidates_df.empty:
 
-    st.header("🧠 Qualification Logic")
+        st.info(
+            "No candidates were returned by the agent."
+        )
+
+    else:
+
+        candidate_columns = [
+            "company_name",
+            "description",
+            "industry",
+            "country",
+            "website",
+            "funding_or_revenue",
+            "us_presence",
+            "founder_name",
+            "founder_role",
+            "email",
+            "email_verified",
+            "qualification_reason",
+        ]
+
+
+        st.dataframe(
+            candidates_df[
+                candidate_columns
+            ],
+            use_container_width=True,
+            hide_index=True,
+        )
+
+
+    # ========================================================
+    # QUALIFICATION LOGIC
+    # ========================================================
+
+    st.header(
+        "🧠 Qualification Logic"
+    )
+
 
     st.markdown(
         """
-        A company is marked **Qualified** only when all five
-        conditions are satisfied:
+        A company is shown as a verified TVB lead only when
+        the agent finds supporting public evidence for the
+        following conditions:
 
-        1. 💰 Funding / revenue is between **$1M and $5M**
-        2. 💻 Business is **technology-related**
-        3. 🇺🇸 US presence is **minimal or none**
-        4. 👤 Founder / CEO information is available
-        5. 📧 A business email field is available
+        **1. 💰 Funding / Revenue**
 
-        This rule-based approach makes the qualification
-        process transparent and explainable.
+        Between **$1M and $5M USD**.
+
+        **2. 💻 Technology Business**
+
+        The company operates a technology-related platform,
+        SaaS product, software, AI platform, fintech platform,
+        data platform or similar technology business.
+
+        **3. 🇺🇸 US Presence**
+
+        No explicit significant US headquarters or US presence
+        is detected in the collected evidence.
+
+        **4. 👤 Founder / CEO**
+
+        A CEO, Founder or Co-founder is identified.
+
+        **5. 📧 Exact Public Email**
+
+        The email must be publicly discoverable and associated
+        with the identified founder/CEO.
+
+        **6. ✅ Email Verification**
+
+        The email domain must have valid MX records.
+        SMTP verification is attempted when the mail server
+        permits it.
+
+        **🚫 No fabricated data**
+
+        The agent does not generate guessed email addresses
+        or synthetic companies.
         """
     )
 
 
-    # -----------------------------------------------------
-    # EXPORT CSV
-    # -----------------------------------------------------
+    # ========================================================
+    # EXPORT
+    # ========================================================
 
-    st.header("📥 Export Results")
+    if not leads_df.empty:
 
-    csv_data = df.to_csv(index=False).encode("utf-8")
-
-    st.download_button(
-        label="⬇️ Download CSV",
-        data=csv_data,
-        file_name="tvb_lead_discovery_results.csv",
-        mime="text/csv",
-        use_container_width=True,
-    )
+        st.header(
+            "📥 Export Results"
+        )
 
 
-    # -----------------------------------------------------
-    # IMPORTANT NOTE
-    # -----------------------------------------------------
+        export_df = leads_df.copy()
+
+
+        # Convert list columns to readable text
+        if "sources" in export_df.columns:
+
+            export_df[
+                "sources"
+            ] = export_df[
+                "sources"
+            ].apply(
+                lambda x: "\n".join(x)
+                if isinstance(x, list)
+                else str(x)
+            )
+
+
+        csv_data = (
+            export_df
+            .to_csv(
+                index=False
+            )
+            .encode("utf-8")
+        )
+
+
+        st.download_button(
+            label="⬇️ Download Verified Leads CSV",
+            data=csv_data,
+            file_name="tvb_verified_leads.csv",
+            mime="text/csv",
+            use_container_width=True,
+        )
+
+
+    # ========================================================
+    # FOOTER
+    # ========================================================
 
     st.divider()
 
     st.caption(
-        "Demo note: The displayed companies and email addresses "
-        "are synthetic records for project demonstration. "
-        "For a production version, these fields should be populated "
-        "only from verifiable public sources."
+        "TVB Lead Discovery Agent | "
+        "Autonomous public-web discovery | "
+        "Evidence-based qualification | "
+        "No fabricated leads"
     )
-
-
-# ---------------------------------------------------------
-# FOOTER
-# ---------------------------------------------------------
-
-st.divider()
-
-st.caption(
-    "TVB Lead Discovery Agent | Automated company discovery "
-    "and qualification | Free Rule-Based Demo"
-)
