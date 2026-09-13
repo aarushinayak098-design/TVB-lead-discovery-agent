@@ -584,14 +584,21 @@ if result is not None:
         ]
 
 
+        display_leads_df = leads_df[display_columns].copy()
+        display_leads_df["email"] = display_leads_df["email"].apply(
+            lambda e: f"mailto:{e}" if e and not str(e).startswith("mailto:") else e
+        )
+
         st.dataframe(
-            leads_df[
-                display_columns
-            ],
+            display_leads_df,
             use_container_width=True,
             hide_index=True,
             column_config={
-                "website": st.column_config.LinkColumn("website"),
+                "website": st.column_config.LinkColumn("Website"),
+                "email": st.column_config.LinkColumn(
+                    "Email",
+                    display_text=r"mailto:(.*)",
+                ),
             },
         )
 
@@ -840,12 +847,22 @@ if result is not None:
         ]
 
 
+        display_candidates_df = candidates_df[candidate_columns].copy()
+        display_candidates_df["email"] = display_candidates_df["email"].apply(
+            lambda e: f"mailto:{e}" if e and not str(e).startswith("mailto:") else e
+        )
+
         st.dataframe(
-            candidates_df[
-                candidate_columns
-            ],
+            display_candidates_df,
             use_container_width=True,
             hide_index=True,
+            column_config={
+                "website": st.column_config.LinkColumn("Website"),
+                "email": st.column_config.LinkColumn(
+                    "Email",
+                    display_text=r"mailto:(.*)",
+                ),
+            },
         )
 
 
